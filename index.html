@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Via — Trust Bridge Prototype</title>
+<!--
+  Via Trust Bridge — lo-fi prototype
+  Built for the Fora final-round onsite. Three phases:
+    P1 = the trust bridge at intake (3 screens, full happy path)
+    P2 = Via in the trip lifecycle (1 preview screen)
+    P3 = Via as Fora's matching infrastructure (1 diagram)
+  Updated 2026-05-27. Static, no backend, fake data, demo-only.
+-->
+<style>
+  /* === Tokens ============================================================ */
+  :root{
+    --ink:#1d1d1f;
+    --mid:#5b5b5f;
+    --soft:#8a8884;
+    --line:#d8cfbf;
+    --line-soft:#ece5d6;
+    --bg:#f5f1ea;
+    --card:#ffffff;
+    --rail:#ebe3d0;
+    --topbar:#f9f5ec;
+    --via:#7b4a2a;
+    --via-bg:#f3e8d5;
+    --via-soft:#e7d6b6;
+    --via-ink:#5a3418;
+    --good:#4a6a4a;
+    --good-bg:#e7eee0;
+    --warn:#8a5a2a;
+    --warn-bg:#f1e5cd;
+    --shadow:0 1px 0 rgba(60,40,15,.04), 0 4px 14px rgba(60,40,15,.05);
+    --shadow-card:0 1px 0 rgba(60,40,15,.03);
+    --serif:'Tiempos Headline','Georgia',serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    font-size:14px;
+  }
+  button{font-family:inherit;font-size:13px;cursor:pointer;}
+  input,textarea{font-family:inherit;font-size:13px;color:var(--ink);}
+
+  /* === App shell ========================================================= */
+  .app{display:grid;grid-template-columns:60px 1fr;min-height:100vh;}
+
+  .rail{
+    background:var(--rail);
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;
+    padding:14px 0;gap:14px;position:sticky;top:0;height:100vh;
+  }
+  .rail .mark{
+    width:30px;height:30px;border-radius:6px;
+    background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;letter-spacing:.04em;margin-bottom:6px;
+  }
+  .rail .icn{
+    width:34px;height:34px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--soft);font-size:16px;cursor:default;
+  }
+  .rail .icn.active{background:#fff;color:var(--ink);box-shadow:var(--shadow-card);}
+  .rail .icn:hover{color:var(--ink);}
+  .rail .spacer{flex:1;}
+  .rail .via-mark{
+    width:34px;height:34px;border-radius:6px;
+    background:var(--via);color:#fff;display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-style:italic;font-size:17px;
+  }
+
+  .content{display:flex;flex-direction:column;min-width:0;}
+
+  .topbar{
+    background:var(--topbar);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;height:54px;position:sticky;top:0;z-index:10;
+  }
+  .topbar .crumb{
+    color:var(--mid);font-size:13px;display:flex;gap:8px;align-items:center;
+  }
+  .topbar .crumb b{color:var(--ink);font-weight:600;}
+  .topbar .crumb .sep{color:var(--soft);}
+  .topbar .right{display:flex;gap:14px;align-items:center;}
+  .lofi{
+    font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--mid);border:1px solid var(--line);padding:4px 9px;border-radius:20px;background:#fff;
+  }
+  .topbar .fora{
+    font-family:var(--serif);font-size:18px;letter-spacing:.18em;font-weight:600;
+  }
+
+  .main{padding:18px 24px 60px;max-width:1280px;width:100%;margin:0 auto;}
+
+  /* === Phase strip ======================================================= */
+  .phasestrip{
+    display:flex;gap:8px;margin-bottom:14px;align-items:center;
+  }
+  .phasestrip .lbl{
+    font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);
+    margin-right:8px;
+  }
+  .phase{
+    border:1px solid var(--line);background:#fff;
+    border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--mid);
+    cursor:pointer;display:flex;align-items:center;gap:8px;
+  }
+  .phase b{color:var(--ink);font-weight:600;}
+  .phase .tinytag{
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);
+    padding:2px 6px;border-radius:3px;background:var(--line-soft);
+  }
+  .phase.active{background:var(--via-bg);border-color:var(--via-soft);}
+  .phase.active b{color:var(--via-ink);}
+  .phase.active .tinytag{background:var(--via);color:#fff;}
+  .phase:hover{border-color:var(--via);}
+
+  /* === Stepper =========================================================== */
+  .steps{display:flex;gap:6px;margin-bottom:22px;}
+  .step{
+    flex:1;border:1px solid var(--line);background:#fff;
+    border-radius:6px;padding:9px 12px;font-size:12.5px;color:var(--mid);
+    cursor:pointer;position:relative;
+  }
+  .step b{display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:1px;}
+  .step.active{background:#fff;border-color:var(--via);color:var(--ink);box-shadow:var(--shadow-card);}
+  .step.active::after{
+    content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--via);border-radius:2px;
+  }
+  .step.active b{color:var(--via);}
+  .step.done b{color:var(--mid);}
+  .step.disabled{opacity:.4;cursor:not-allowed;}
+
+  /* === Screens =========================================================== */
+  .screen{display:none;}
+  .screen.show{display:block;}
+
+  h1{font-size:22px;font-weight:650;letter-spacing:-.015em;margin-bottom:4px;}
+  h2{font-size:15px;font-weight:600;letter-spacing:-.005em;}
+  .sub{color:var(--mid);font-size:13.5px;margin-bottom:18px;}
+
+  /* === Cards ============================================================= */
+  .card{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:8px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow-card);
+  }
+  .card.via-card{border-color:var(--via-soft);}
+  .card.via-card .acc{border-left:3px solid var(--via);padding-left:10px;}
+
+  /* === Buttons / pills =================================================== */
+  .btn{
+    border-radius:999px;padding:8px 16px;border:1px solid var(--ink);
+    background:var(--ink);color:#fff;font-weight:550;font-size:13px;cursor:pointer;
+  }
+  .btn:hover{opacity:.9;}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line);}
+  .btn.ghost:hover{border-color:var(--ink);}
+  .btn.sm{padding:5px 12px;font-size:12px;}
+  .btn.viaghost{
+    background:#fff;color:var(--via);border-color:var(--via-soft);
+  }
+  .btn.viaghost:hover{border-color:var(--via);}
+  .btn:disabled{opacity:.4;cursor:default;}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:600;letter-spacing:.04em;
+    padding:3px 9px 3px 8px;border-radius:20px;border:1px solid var(--line);background:#fff;
+    color:var(--mid);text-transform:uppercase;
+  }
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--soft);}
+  .pill.lock{color:var(--good);}
+  .pill.lock .dot{background:var(--good);}
+  .pill.match{color:var(--via);}
+  .pill.match .dot{background:var(--via);}
+  .pill.need{color:var(--warn);}
+  .pill.need .dot{background:var(--warn);}
+  .pill.pick{color:#fff;background:var(--via);border-color:var(--via);}
+  .pill.pick .dot{background:#fff;}
+  .pill.low{color:var(--mid);}
+  .pill.low .dot{background:var(--soft);}
+
+  /* === Inbox screen ====================================================== */
+  .inbox-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
+  @media (max-width:980px){.inbox-grid{grid-template-columns:1fr;}}
+
+  .inbox-list{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-card);}
+  .inbox-head{
+    padding:13px 18px;border-bottom:1px solid var(--line-soft);
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);
+  }
+  .inbox-head b{color:var(--ink);font-weight:600;font-size:12px;letter-spacing:.06em;}
+
+  .inrow{
+    padding:14px 18px;border-top:1px solid var(--line-soft);cursor:pointer;
+    display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;
+  }
+  .inrow:first-of-type{border-top:none;}
+  .inrow:hover{background:#faf6ed;}
+  .inrow.active{background:#fff;border-left:3px solid var(--via);padding-left:15px;}
+  .inrow .who{font-weight:600;font-size:13.5px;color:var(--ink);}
+  .inrow .what{font-size:12.5px;color:var(--mid);margin-top:1px;}
+  .inrow .when{font-size:11.5px;color:var(--soft);margin-top:3px;}
+  .inrow .statwrap{display:flex;align-items:center;gap:6px;}
+
+  .stat{
+    font-size:11px;letter-spacing:.03em;color:var(--mid);
+    padding:3px 9px;border-radius:20px;border:1px solid var(--line-soft);background:var(--bg);
+    white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
+  }
+  .stat.ready{color:var(--via);background:var(--via-bg);border-color:var(--via-soft);}
+  .stat.working{color:var(--mid);}
+  .stat.working .pulse{
+    width:6px;height:6px;border-radius:50%;background:var(--soft);
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  .stat.question{color:var(--warn);background:var(--warn-bg);border-color:#e0cba2;}
+  .stat.idle{color:var(--soft);}
+  @keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+
+  .detail{
+    border-top:1px solid var(--line-soft);padding:18px;background:#fffdf6;
+  }
+  .detail-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .detail-head .title{font-size:16px;font-weight:650;}
+  .detail-head .meta{font-size:11.5px;color:var(--mid);}
+  .kv{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 24px;margin:12px 0 14px;}
+  .kv > div{font-size:13px;}
+  .kv span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:2px;}
+  .quote{
+    font-size:13px;color:var(--ink);background:#fff;
+    border-left:3px solid var(--via-soft);padding:10px 14px;border-radius:0 5px 5px 0;
+    font-style:italic;
+  }
+  .quote .qattr{display:block;margin-top:5px;color:var(--mid);font-style:normal;font-size:11.5px;letter-spacing:.02em;}
+  /* Demo notes — chrome that talks to the Fora audience, not the advisor */
+  .demo-notes{
+    display:flex;align-items:center;gap:0;
+    padding:8px 14px 8px 16px;
+    border:1px dashed var(--via-soft);
+    border-radius:6px;background:#fbf6e8;
+    margin-bottom:18px;
+  }
+  .demo-notes .dn-label{
+    font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--via);padding-right:12px;border-right:1px solid var(--via-soft);
+    margin-right:14px;
+  }
+  .demo-notes .dn-item{
+    font-size:11px;font-weight:500;letter-spacing:.04em;
+    color:var(--mid);margin-right:18px;
+  }
+  .demo-notes .dn-item:last-child{margin-right:0;}
+  .demo-notes .dn-item b{color:var(--via);font-weight:600;}
+  .demo-notes .dn-sep{color:var(--via-soft);margin-right:18px;}
+
+  /* Via sidebar */
+  .via-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:74px;}
+  .via-primary{
+    background:#fff;border:1px solid var(--via-soft);border-radius:8px;padding:18px;
+    box-shadow:var(--shadow);
+  }
+  .via-primary .hd{
+    display:flex;align-items:center;gap:8px;margin-bottom:8px;
+    font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--via);font-weight:600;
+  }
+  .via-primary .hd::before{
+    content:"";width:8px;height:8px;border-radius:50%;background:var(--via);
+  }
+  .via-primary h3{
+    font-size:16px;font-weight:650;margin-bottom:5px;letter-spacing:-.005em;
+  }
+  .via-primary p{font-size:13px;color:var(--mid);margin-bottom:12px;}
+  .via-primary .stats{
+    display:flex;gap:14px;font-size:11.5px;color:var(--mid);
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft);
+  }
+  .via-primary .stats b{color:var(--ink);font-weight:600;display:block;font-size:13.5px;font-variant-numeric:tabular-nums;}
+
+  .via-others{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;}
+  .via-others .hd{
+    font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-bottom:10px;
+  }
+  .via-others .orow{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 0;border-top:1px solid var(--line-soft);font-size:12.5px;
+  }
+  .via-others .orow:first-of-type{border-top:none;}
+  .via-others .orow .nm{color:var(--ink);font-weight:550;}
+  .via-others .orow .st{color:var(--mid);font-size:11.5px;}
+
+  /* === Outline screen (Screen 2) ========================================== */
+  .scorebar{display:flex;gap:10px;margin-bottom:18px;}
+  .score{
+    flex:1;background:#fff;border:1px solid var(--line);border-radius:7px;padding:12px 14px;
+    box-shadow:var(--shadow-card);
+  }
+  .score .n{font-size:24px;font-weight:680;font-variant-numeric:tabular-nums;line-height:1.1;}
+  .score .l{font-size:10px;color:var(--mid);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+  .score.lock .n{color:var(--good);}
+  .score.match .n{color:var(--via);}
+  .score.need .n{color:var(--warn);}
+
+  .el{
+    display:flex;gap:14px;padding:16px 0;border-top:1px solid var(--line-soft);
+  }
+  .el:first-of-type{border-top:none;}
+  .el .photo{
+    width:72px;height:54px;flex:none;border-radius:5px;border:1px solid var(--line-soft);
+    background:linear-gradient(140deg,#efe6d0 0%,#dbc4a4 55%,#a87a55 100%);
+  }
+  .el .photo.dim{
+    background:linear-gradient(140deg,#e8e1d2 0%,#cdc4af 55%,#9a8e74 100%);
+  }
+  .el .photo.lock{
+    background:linear-gradient(140deg,#e3e6dc 0%,#bcc6a6 55%,#7e8b65 100%);
+  }
+  .el-body{flex:1;min-width:0;}
+  .el-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .el-name{font-weight:600;font-size:14px;}
+  .el-detail{font-size:12.5px;color:var(--mid);margin-top:1px;}
+  .why{
+    font-size:13px;color:var(--ink);margin-top:8px;line-height:1.45;
+  }
+  .why .carlota{color:var(--via);font-style:italic;}
+  .rate{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
+  .rate-num{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;}
+  .rate-est{color:var(--mid);}
+  .rate-ok{color:var(--good);}
+  .meta{font-size:11.5px;color:var(--mid);}
+
+  .opts{margin-top:10px;}
+  .opt{
+    display:flex;align-items:center;gap:9px;font-size:12.5px;
+    padding:8px 11px;border:1px solid var(--line-soft);border-radius:5px;margin-top:6px;cursor:pointer;
+    background:#fff;
+  }
+  .opt:hover{border-color:var(--via-soft);background:#fffaef;}
+  .opt input{accent-color:var(--via);}
+  .opt .vibe{color:var(--mid);}
+  .opt .src{
+    font-size:10.5px;letter-spacing:.04em;color:var(--via);text-transform:uppercase;
+    margin-left:auto;
+  }
+
+  /* Refine widget */
+  .refine-row{margin-top:10px;}
+  .refine-toggle{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11.5px;color:var(--via);background:transparent;border:1px dashed var(--via-soft);
+    border-radius:20px;padding:4px 12px;cursor:pointer;
+  }
+  .refine-toggle::before{
+    content:"";width:6px;height:6px;border-radius:50%;background:var(--via);
+  }
+  .refine-toggle:hover{background:var(--via-bg);}
+  .refine-panel{
+    display:none;margin-top:10px;border:1px solid var(--via-soft);border-radius:6px;
+    background:#fffaef;padding:11px 13px;
+  }
+  .refine-panel.open{display:block;}
+  .refine-panel .ipt{
+    width:100%;border:1px solid var(--line);border-radius:5px;padding:8px 10px;
+    background:#fff;font-size:13px;outline:none;
+  }
+  .refine-panel .ipt:focus{border-color:var(--via);}
+  .refine-panel .row{display:flex;gap:8px;margin-top:8px;justify-content:flex-end;}
+  .refine-thinking{
+    display:none;font-size:12px;color:var(--via);margin-top:10px;align-items:center;gap:8px;
+  }
+  .refine-thinking.show{display:flex;}
+  .refine-thinking::before{
+    content:"";width:6px;height:6px;border-radius:50%;background:var(--via);
+    animation:pulse 1.2s ease-in-out infinite;
+  }
+  .refine-result{
+    display:none;margin-top:10px;font-size:13px;color:var(--ink);
+    background:var(--via-bg);border-radius:5px;padding:9px 12px;line-height:1.45;
+  }
+  .refine-result.show{display:block;}
+  .refine-result b{color:var(--via);}
+
+  /* Gap callout */
+  .gap-note{
+    font-size:13px;border:1px dashed #d6b377;background:var(--warn-bg);
+    color:#5a3a14;border-radius:7px;padding:12px 14px;margin-top:6px;line-height:1.5;
+  }
+  .gap-note b{color:var(--warn);}
+
+  /* === Itinerary builder (Screen 3) ====================================== */
+  .builder-shell{
+    background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .builder-head{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    padding:18px 22px 14px;border-bottom:1px solid var(--line-soft);
+  }
+  .builder-head .brand{font-family:var(--serif);font-size:22px;letter-spacing:.22em;font-weight:600;}
+  .builder-head .trip{
+    font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mid);margin-top:2px;
+  }
+  .builder-head .util{font-size:11.5px;color:var(--mid);}
+
+  .builder-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:0;}
+  @media (max-width:960px){.builder-grid{grid-template-columns:1fr;}}
+
+  .hero{
+    position:relative;min-height:360px;
+    background:linear-gradient(160deg,#3a2a14 0%,#704830 35%,#a06a3e 65%,#dcb27a 100%);
+    color:#fff;
+  }
+  .hero .day{
+    position:absolute;left:24px;bottom:22px;
+  }
+  .hero .day .lbl{
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.85;margin-bottom:6px;
+  }
+  .hero .day .title{
+    font-family:var(--serif);font-size:32px;line-height:1.08;font-weight:550;letter-spacing:-.005em;
+    max-width:340px;
+  }
+  .hero .img-btn{
+    position:absolute;right:18px;bottom:18px;
+    background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.25);
+    border-radius:20px;padding:5px 12px;font-size:11.5px;cursor:pointer;
+  }
+  .hero .img-btn:hover{background:rgba(0,0,0,.6);}
+
+  .timeline{padding:18px 20px;}
+  .timeline .tline{
+    display:grid;grid-template-columns:64px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line-soft);
+    cursor:pointer;
+  }
+  .timeline .tline:first-of-type{border-top:none;padding-top:4px;}
+  .timeline .tdate{
+    font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mid);
+    font-weight:600;line-height:1.2;padding-top:2px;
+  }
+  .timeline .tbody .tname{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .timeline .tbody .tdetail{font-size:12.5px;color:var(--mid);margin-top:2px;}
+  .timeline .tbody .tsig{
+    font-size:11.5px;color:var(--via);margin-top:4px;display:none;
+  }
+  .timeline .tline:hover .tsig,
+  .timeline .tline.open .tsig{display:block;}
+  .timeline .tline:hover{background:#fffaef;border-radius:5px;}
+
+  .builder-foot{
+    padding:14px 22px;border-top:1px solid var(--line-soft);background:#fffdf6;
+    font-size:12.5px;color:var(--mid);font-style:italic;line-height:1.5;
+  }
+  .builder-foot b{font-style:normal;color:var(--via);font-weight:600;}
+
+  .feedback{
+    background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:15px 18px;margin-top:14px;box-shadow:var(--shadow-card);
+  }
+  .feedback p{font-size:13.5px;margin-bottom:11px;color:var(--ink);}
+  .fpill{
+    display:inline-block;border:1px solid var(--line);border-radius:20px;
+    padding:6px 14px;font-size:12.5px;cursor:pointer;margin-right:6px;background:#fff;
+  }
+  .fpill:hover{border-color:var(--via);}
+  .fpill.picked{background:var(--via-bg);border-color:var(--via);color:var(--via-ink);}
+  .fdone{font-size:12px;color:var(--via);margin-top:10px;display:none;}
+  .fdone.show{display:block;}
+
+  /* === Phase 2 =========================================================== */
+  .clientmsg{
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:14px;
+    box-shadow:var(--shadow-card);
+  }
+  .clientmsg .qm{font-size:32px;color:var(--via-soft);line-height:1;font-family:var(--serif);float:left;margin-right:8px;}
+  .clientmsg p{font-size:14.5px;line-height:1.55;color:var(--ink);}
+  .clientmsg .attr{
+    color:var(--mid);font-size:12px;display:block;margin-top:10px;letter-spacing:.02em;
+  }
+
+  .p2-panel{
+    background:#fff;border:1px solid var(--via-soft);border-radius:8px;padding:6px 18px 18px;
+    box-shadow:var(--shadow);
+  }
+  .p2-panel .hd{
+    font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--via);
+    margin:14px 0 4px;font-weight:600;display:flex;align-items:center;gap:8px;
+  }
+  .p2-panel .hd::before{
+    content:"";width:8px;height:8px;border-radius:50%;background:var(--via);
+  }
+  .p2-item{
+    display:grid;grid-template-columns:90px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line-soft);
+  }
+  .p2-item:first-of-type{border-top:none;}
+  .p2-item .ptype{
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    padding-top:2px;
+  }
+  .p2-item .ptype.preserved{color:var(--good);}
+  .p2-item .ptype.redrafted{color:var(--via);}
+  .p2-item .ptype.extended{color:var(--warn);}
+  .p2-item .pname{font-size:13.5px;font-weight:600;}
+  .p2-item .pdetail{font-size:12.5px;color:var(--mid);margin-top:2px;line-height:1.45;}
+  .ratewatch{
+    background:var(--warn-bg);border:1px solid #e0cba2;border-radius:6px;
+    padding:10px 14px;margin-top:14px;font-size:12.5px;color:#5a3a14;
+  }
+  .ratewatch b{color:var(--warn);font-weight:600;}
+  .p2-gap{
+    margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft);
+  }
+  .p2-gap .gtxt{font-size:13px;color:var(--ink);margin-bottom:8px;}
+  .p2-gap .gipt{
+    width:100%;border:1px solid var(--line);border-radius:5px;padding:9px 11px;background:#fff;outline:none;
+  }
+  .p2-gap .gipt:focus{border-color:var(--via);}
+  /* === Phase 3 =========================================================== */
+  .p3-pipeline{
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px 24px;margin-bottom:14px;
+    box-shadow:var(--shadow-card);
+  }
+  .p3-stages{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:18px;position:relative;}
+  .p3-stage{
+    background:var(--bg);border:1px solid var(--line-soft);border-radius:5px;
+    padding:11px 8px;text-align:center;
+  }
+  .p3-stage .pn{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);}
+  .p3-stage .pl{font-size:12px;font-weight:600;color:var(--ink);margin-top:2px;}
+  .p3-via{
+    background:var(--via);color:#fff;border-radius:5px;padding:9px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .p3-via .lbl{
+    font-family:var(--serif);font-style:italic;font-size:15px;
+  }
+  .p3-via .desc{font-size:11.5px;opacity:.85;}
+
+  .p3-boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+  @media (max-width:840px){.p3-boxes{grid-template-columns:1fr;}}
+  .p3-box{
+    background:#fff;border:1px solid var(--line);border-radius:7px;padding:14px 16px;
+    box-shadow:var(--shadow-card);
+  }
+  .p3-box .hd{
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--via);
+    margin-bottom:8px;font-weight:700;
+  }
+  .p3-box h3{font-size:13.5px;font-weight:650;margin-bottom:6px;}
+  .p3-box p{font-size:12.5px;color:var(--mid);line-height:1.5;}
+  .p3-foot{
+    font-size:12.5px;color:var(--mid);font-style:italic;
+    padding:12px 14px;background:#fff;border:1px dashed var(--line);border-radius:6px;line-height:1.5;
+  }
+  .p3-foot b{color:var(--via);font-style:normal;font-weight:600;}
+  .p3-summary{
+    font-size:13.5px;color:var(--ink);text-align:center;margin-top:18px;line-height:1.55;
+  }
+  .p3-summary b{color:var(--via);font-weight:600;}
+
+  /* === Navrow ============================================================ */
+  .navrow{
+    display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:14px;
+  }
+  .utility-link{
+    font-size:11.5px;color:var(--soft);text-decoration:underline;cursor:pointer;background:none;border:none;
+  }
+  .utility-link:hover{color:var(--mid);}
+
+  /* === Misc ============================================================== */
+  .preview-pre{
+    background:#fff;border:1px dashed var(--via-soft);border-radius:6px;
+    padding:10px 14px;font-size:11.5px;color:var(--mid);margin-bottom:14px;
+  }
+  .preview-pre b{color:var(--via);font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ Left rail ============ -->
+  <aside class="rail">
+    <div class="mark">F</div>
+    <div class="icn active" title="Inbox">✉</div>
+    <div class="icn" title="Trips">◧</div>
+    <div class="icn" title="Partners">★</div>
+    <div class="icn" title="Deals">◇</div>
+    <div class="icn" title="Learn">○</div>
+    <div class="spacer"></div>
+    <div class="via-mark" title="Via">V</div>
+  </aside>
+
+  <!-- ============ Content ============ -->
+  <div class="content">
+
+    <header class="topbar">
+      <div class="crumb" id="crumb">
+        <b>Inbox</b>
+      </div>
+      <div class="right">
+        <div class="lofi">Lo-fi prototype · not production</div>
+        <div class="fora">FORA</div>
+      </div>
+    </header>
+
+    <div class="main">
+
+      <!-- Phase strip -->
+      <div class="phasestrip">
+        <span class="lbl">Roadmap</span>
+        <div class="phase active" id="ph1" onclick="goPhase(1)">
+          <span class="tinytag">P1</span><b>Trust bridge</b>
+        </div>
+        <div class="phase" id="ph2" onclick="goPhase(2)">
+          <span class="tinytag">P2</span>Lifecycle rails
+        </div>
+        <div class="phase" id="ph3" onclick="goPhase(3)">
+          <span class="tinytag">P3</span>Platform layer
+        </div>
+      </div>
+
+      <!-- Phase 1 stepper -->
+      <div class="steps" id="stepper">
+        <div class="step active" id="s1" onclick="goStep(1)"><b>Step 1</b>Advisor inbox</div>
+        <div class="step" id="s2" onclick="goStep(2)"><b>Step 2</b>Via's outline</div>
+        <div class="step" id="s3" onclick="goStep(3)"><b>Step 3</b>Itinerary builder</div>
+      </div>
+
+      <!-- Demo notes — chrome for the Fora audience, not the advisor -->
+      <div class="demo-notes" id="demoNotes">
+        <span class="dn-label">Demo</span>
+        <span class="dn-item" id="dn-stage">Where the trust bridge starts</span>
+        <span class="dn-item" id="dn-segment">Segment: <b>AI Dabbler</b></span>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- SCREEN 1 — Inbox + Via sidebar                            -->
+      <!-- ========================================================= -->
+      <div class="screen show" id="screen1">
+
+        <h1>Your inbox, this morning</h1>
+        <p class="sub">4 active inquiries. Via worked the queue overnight — one's ready for you to open.</p>
+
+        <div class="inbox-grid">
+
+          <div>
+            <div class="inbox-list">
+              <div class="inbox-head">
+                <b>Active inquiries · 4</b>
+                <span>Sorted by Via readiness</span>
+              </div>
+
+              <!-- Reyes active -->
+              <div class="inrow active">
+                <div>
+                  <div class="who">Maya &amp; Jordan Reyes</div>
+                  <div class="what">Anniversary · Lisbon + the Algarve · Oct 9–17</div>
+                  <div class="when">Submitted 2 days ago</div>
+                </div>
+                <div class="statwrap">
+                  <span class="stat ready">Outline ready</span>
+                </div>
+              </div>
+
+              <!-- Reyes detail -->
+              <div class="detail">
+                <div class="detail-head">
+                  <div>
+                    <div class="title">Maya &amp; Jordan Reyes — anniversary trip</div>
+                  </div>
+                  <div class="meta">Submitted via your public intake form, 2 days ago</div>
+                </div>
+                <div class="kv">
+                  <div><span>Destination</span>Lisbon + the Algarve</div>
+                  <div><span>Dates</span>Oct 9–17 (fixed)</div>
+                  <div><span>Travelers</span>2 adults</div>
+                  <div><span>Hotel budget</span>~$6,000 total</div>
+                  <div><span>Flight</span>TAP TP204 · arr. Lisbon Oct 9 (already booked)</div>
+                  <div><span>Vibe</span>Boutique, a pool, no chains</div>
+                </div>
+                <div class="quote">
+                  "We loved the little boutique place you found us in Mexico City. Somewhere with a pool would be a dream. Maya isn't a big-chain-hotel person."
+                  <span class="qattr">— intake form, free-response field</span>
+                </div>
+              </div>
+
+              <!-- Others -->
+              <div class="inrow" onclick="bumpOther('lin')">
+                <div>
+                  <div class="who">Lin &amp; Park</div>
+                  <div class="what">Honeymoon · Santorini + Milos · Sep 14–25</div>
+                  <div class="when">Submitted 6 hrs ago</div>
+                </div>
+                <div class="statwrap">
+                  <span class="stat working"><span class="pulse"></span>Still pulling rates</span>
+                </div>
+              </div>
+
+              <div class="inrow" onclick="bumpOther('singh')">
+                <div>
+                  <div class="who">The Singh family</div>
+                  <div class="what">Tokyo + Kyoto, 4 travelers · Nov 3–12</div>
+                  <div class="when">Waiting on you · 1 day</div>
+                </div>
+                <div class="statwrap">
+                  <span class="stat question">Has a question for you</span>
+                </div>
+              </div>
+
+              <div class="inrow" onclick="bumpOther('carter')">
+                <div>
+                  <div class="who">Dana Carter</div>
+                  <div class="what">Caribbean cruise · 7 nights · Aug 17–24</div>
+                  <div class="when">Submitted 18 min ago</div>
+                </div>
+                <div class="statwrap">
+                  <span class="stat idle">Not started</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Via sidebar -->
+          <aside class="via-side">
+            <div class="via-primary">
+              <div class="hd">Via · for Reyes</div>
+              <h3>Outline ready</h3>
+              <p>Took a look against their history and what's available right now. Drafted an outline — pick it up whenever.</p>
+              <button class="btn" onclick="goStep(2)">Open Via's outline →</button>
+              <div class="stats">
+                <div><b>4</b>of 6 elements matched</div>
+                <div><b>1</b>needs your call</div>
+                <div><b>1</b>left for you</div>
+              </div>
+            </div>
+
+            <div class="via-others">
+              <div class="hd">Via · other trips</div>
+              <div class="orow">
+                <span class="nm">Lin &amp; Park</span>
+                <span class="st">still pulling rates</span>
+              </div>
+              <div class="orow">
+                <span class="nm">The Singh family</span>
+                <span class="st">has a question for you</span>
+              </div>
+              <div class="orow">
+                <span class="nm">Dana Carter</span>
+                <span class="st">not started</span>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+
+        <div class="navrow">
+          <span></span>
+          <button class="btn" onclick="goStep(2)">Open Via's outline for the Reyes →</button>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- SCREEN 2 — Via's outline + refine                         -->
+      <!-- ========================================================= -->
+      <div class="screen" id="screen2">
+
+        <h1>Via's outline for the Reyes</h1>
+        <p class="sub">Every element shows how confident Via is — and where you can reach in. The taste calls are still yours.</p>
+
+        <div class="scorebar">
+          <div class="score lock"><div class="n">2</div><div class="l">Locked from form</div></div>
+          <div class="score match"><div class="n" id="scoreMatch">3</div><div class="l">Matched by Via</div></div>
+          <div class="score need"><div class="n" id="scoreNeed">1</div><div class="l">Needs your call</div></div>
+        </div>
+
+        <div class="card">
+
+          <!-- Flights -->
+          <div class="el">
+            <div class="photo lock"></div>
+            <div class="el-body">
+              <div class="el-top">
+                <div>
+                  <div class="el-name">Flights · TAP TP204</div>
+                  <div class="el-detail">Arrives Lisbon Oct 9 · already booked</div>
+                </div>
+                <span class="pill lock"><span class="dot"></span>Locked</span>
+              </div>
+              <div class="why">Locked — they gave us the flight.</div>
+            </div>
+          </div>
+
+          <!-- Dates -->
+          <div class="el">
+            <div class="photo lock"></div>
+            <div class="el-body">
+              <div class="el-top">
+                <div>
+                  <div class="el-name">Trip dates · Oct 9 – Oct 17</div>
+                  <div class="el-detail">8 nights, fixed</div>
+                </div>
+                <span class="pill lock"><span class="dot"></span>Locked</span>
+              </div>
+              <div class="why">Locked — fixed in the form. Every rate below is anchored to them.</div>
+            </div>
+          </div>
+
+          <!-- Lisbon -->
+          <div class="el">
+            <div class="photo"></div>
+            <div class="el-body">
+              <div class="el-top">
+                <div>
+                  <div class="el-name">Lisbon · Hotel das Janelas Verdes</div>
+                  <div class="el-detail">Boutique, Príncipe Real · Oct 9–13 · 4 nights</div>
+                </div>
+                <span class="pill match"><span class="dot"></span>Matched by Via</span>
+              </div>
+              <div class="why">Boutique, has a pool, preferred partner. <span class="carlota">Same shape as Hotel Carlota — the boutique you booked them in Mexico City, May 2024.</span></div>
+              <div class="rate" id="rate1">
+                <span class="rate-num rate-est">~$1,840 est.</span>
+                <span class="meta">Via estimate · not a held rate</span>
+                <button class="btn ghost sm" onclick="validateRate(1)">Validate rate</button>
+              </div>
+              <div class="refine-row">
+                <button class="refine-toggle" onclick="toggleRefine('lisbon')">Refine with Via</button>
+                <div class="refine-panel" id="refine-lisbon">
+                  <input class="ipt" id="ipt-lisbon" placeholder="Tell Via what to adjust — e.g. 'lean quieter, more residential'">
+                  <div class="row">
+                    <button class="btn ghost sm" onclick="closeRefine('lisbon')">Cancel</button>
+                    <button class="btn sm" onclick="submitRefine('lisbon')">Send to Via</button>
+                  </div>
+                  <div class="refine-thinking" id="think-lisbon">Via is re-checking supply…</div>
+                  <div class="refine-result" id="result-lisbon"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Algarve -->
+          <div class="el">
+            <div class="photo dim"></div>
+            <div class="el-body">
+              <div class="el-top">
+                <div>
+                  <div class="el-name">The Algarve · Oct 13–17 · 4 nights</div>
+                  <div class="el-detail">Region not specified in the form</div>
+                </div>
+                <span class="pill need" id="tag-algarve"><span class="dot"></span>Needs your call</span>
+              </div>
+              <div class="why">Lagos, Comporta and Tavira are very different trips — that one's a taste call. Three Fora boutique options in budget below.</div>
+              <div class="opts" id="opts-algarve">
+                <label class="opt">
+                  <input type="radio" name="algarve" onchange="resolveAlgarve('Vila Palmeira — Lagos')">
+                  <span><b>Vila Palmeira</b> — Lagos · lively, walkable · ~$1,920 est.</span>
+                  <span class="src">2 property reports</span>
+                </label>
+                <label class="opt">
+                  <input type="radio" name="algarve" onchange="resolveAlgarve('Casa Comporta')">
+                  <span><b>Casa Comporta</b> · quiet, design-led · ~$2,250 est.</span>
+                  <span class="src">Fora Reserve</span>
+                </label>
+                <label class="opt">
+                  <input type="radio" name="algarve" onchange="resolveAlgarve('Quinta Tavira')">
+                  <span><b>Quinta Tavira</b> · sleepy, traditional · ~$1,680 est.</span>
+                  <span class="src">Rate dropping</span>
+                </label>
+              </div>
+              <div class="refine-row">
+                <button class="refine-toggle" onclick="toggleRefine('algarve')">Refine with Via</button>
+                <div class="refine-panel" id="refine-algarve">
+                  <input class="ipt" id="ipt-algarve" placeholder="Tell Via what to adjust — e.g. 'add a wildcard option'">
+                  <div class="row">
+                    <button class="btn ghost sm" onclick="closeRefine('algarve')">Cancel</button>
+                    <button class="btn sm" onclick="submitRefine('algarve')">Send to Via</button>
+                  </div>
+                  <div class="refine-thinking" id="think-algarve">Via is re-checking supply…</div>
+                  <div class="refine-result" id="result-algarve"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Douro -->
+          <div class="el">
+            <div class="photo dim"></div>
+            <div class="el-body">
+              <div class="el-top">
+                <div>
+                  <div class="el-name">Douro Valley · wine day</div>
+                  <div class="el-detail">Day trip from Lisbon · third-party experiences</div>
+                </div>
+                <span class="pill match low"><span class="dot"></span>Matched · lower confidence</span>
+              </div>
+              <div class="why">Popular pairing for this region. Experiences come from a third-party API — treat as a prompt, not a recommendation.</div>
+              <div class="refine-row">
+                <button class="refine-toggle" onclick="toggleRefine('douro')">Refine with Via</button>
+                <div class="refine-panel" id="refine-douro">
+                  <input class="ipt" id="ipt-douro" placeholder="Tell Via what to adjust — e.g. 'swap for Sintra'">
+                  <div class="row">
+                    <button class="btn ghost sm" onclick="closeRefine('douro')">Cancel</button>
+                    <button class="btn sm" onclick="submitRefine('douro')">Send to Via</button>
+                  </div>
+                  <div class="refine-thinking" id="think-douro">Via is re-checking supply…</div>
+                  <div class="refine-result" id="result-douro"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="gap-note">
+          <b>Open — the anniversary touch.</b> Form says anniversary. I don't have a supply suggestion for marking it — that's the kind of touch that keeps you in the trip. Your move, not mine.
+        </div>
+
+        <div class="navrow">
+          <button class="btn ghost" onclick="goStep(1)">← Back to inbox</button>
+          <button class="btn" onclick="goStep(3)">Send outline to itinerary builder →</button>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- SCREEN 3 — Itinerary builder                              -->
+      <!-- ========================================================= -->
+      <div class="screen" id="screen3">
+
+        <div class="builder-shell">
+          <div class="builder-head">
+            <div>
+              <div class="brand">FORA</div>
+              <div class="trip">Reyes Anniversary · Oct 9–17, 2026</div>
+            </div>
+            <div class="util">Saved 3 min ago · auto-drafted</div>
+          </div>
+
+          <div class="builder-grid">
+            <div class="hero">
+              <div class="day">
+                <div class="lbl">Day 1 · Wednesday</div>
+                <div class="title">Arrival in Lisbon, an easy first night.</div>
+              </div>
+              <button class="img-btn">Change image</button>
+            </div>
+
+            <div class="timeline">
+              <div class="tline">
+                <div class="tdate">Oct 9</div>
+                <div class="tbody">
+                  <div class="tname">Arrives Lisbon · TAP TP204</div>
+                  <div class="tdetail">14:30 · airport transfer suggested</div>
+                  <div class="tsig">Locked from intake form</div>
+                </div>
+              </div>
+
+              <div class="tline">
+                <div class="tdate">Oct 9–13</div>
+                <div class="tbody">
+                  <div class="tname">Hotel das Janelas Verdes</div>
+                  <div class="tdetail">Príncipe Real · 4 nights · boutique with pool</div>
+                  <div class="tsig">Matched by Via · preferred partner · same shape as Hotel Carlota</div>
+                </div>
+              </div>
+
+              <div class="tline" id="tline-algarve">
+                <div class="tdate">Oct 13–17</div>
+                <div class="tbody">
+                  <div class="tname"><span id="tline-algarve-name">The Algarve · region TBD</span></div>
+                  <div class="tdetail" id="tline-algarve-detail">Your call — three Fora boutique options pending</div>
+                  <div class="tsig" id="tline-algarve-sig">Needs your call — pick on the outline screen</div>
+                </div>
+              </div>
+
+              <div class="tline">
+                <div class="tdate">Oct 14</div>
+                <div class="tbody">
+                  <div class="tname">Douro Valley wine day</div>
+                  <div class="tdetail">Day trip · 3rd-party experience</div>
+                  <div class="tsig">Matched · lower confidence</div>
+                </div>
+              </div>
+
+              <div class="tline">
+                <div class="tdate">Oct 17</div>
+                <div class="tbody">
+                  <div class="tname">Return · TAP TP207</div>
+                  <div class="tdetail">21:55 LIS · arrives the next morning</div>
+                  <div class="tsig">Locked from intake form</div>
+                </div>
+              </div>
+
+              <div class="tline">
+                <div class="tdate">Open</div>
+                <div class="tbody">
+                  <div class="tname">Anniversary touch</div>
+                  <div class="tdetail">No supply match · your move</div>
+                  <div class="tsig">Via flagged — outline doesn't fill this</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="builder-foot">
+            <b>Outline assembled by Via</b> — from the Reyes intake form, the CRM (Hotel Carlota, May 2024), and live Fora supply. Yours to edit.
+          </div>
+        </div>
+
+        <div class="feedback">
+          <p><strong>Did the Via Outline save you time?</strong></p>
+          <span class="fpill" onclick="fb(this)">Yes</span>
+          <span class="fpill" onclick="fb(this)">Used a little</span>
+          <span class="fpill" onclick="fb(this)">No</span>
+          <div class="fdone" id="fbDone">Thanks — that's the signal we watch.</div>
+        </div>
+
+        <div class="navrow">
+          <button class="btn ghost" onclick="goStep(2)">← Back to outline</button>
+          <button class="utility-link" onclick="resetProto()">Restart demo</button>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- PHASE 2 — Via in the trip lifecycle                       -->
+      <!-- ========================================================= -->
+      <div class="screen" id="screenP2">
+
+        <h1>The Reyes wrote back.</h1>
+        <p class="sub">Same trip, two weeks on. Via iterates on what changed and shows what it preserved — it doesn't re-do the outline.</p>
+
+        <div class="clientmsg">
+          <span class="qm">"</span>
+          <p>Loved Lisbon. The Algarve felt too quiet — can we keep one of those nights but make the other something more lively? Also, my mom is now joining us in Lisbon, can we add a connecting room?</p>
+          <span class="attr">— Maya Reyes · 2 hours ago · reply to your proposal</span>
+        </div>
+
+        <div class="p2-panel">
+          <div class="hd">Via · what I already did</div>
+
+          <div class="p2-item">
+            <div class="ptype preserved">Preserved</div>
+            <div>
+              <div class="pname">Casa Comporta · Oct 13–14</div>
+              <div class="pdetail">Your earlier pick, held. One night kept — that's the quiet half they liked.</div>
+            </div>
+          </div>
+
+          <div class="p2-item">
+            <div class="ptype redrafted">Re-drafted</div>
+            <div>
+              <div class="pname">Vila Palmeira, Lagos · Oct 14–17</div>
+              <div class="pdetail">Matches "more lively" — walkable, restaurants. Rate ~$1,950 est., re-validated 4 min ago. Same vendor as the Hotel Carlota family.</div>
+            </div>
+          </div>
+
+          <div class="p2-item">
+            <div class="ptype extended">Extended</div>
+            <div>
+              <div class="pname">Hotel das Janelas Verdes · connecting room · Oct 9–13</div>
+              <div class="pdetail">For mom. Preferred partner, request submitted. Her flight isn't on the form — you'll need it.</div>
+            </div>
+          </div>
+
+          <div class="ratewatch"><b>Rate watch.</b> 3 of 4 prior rates still live. Lisbon ticked up $40 — flagged.</div>
+
+          <div class="p2-gap">
+            <div class="gtxt"><b>One thing.</b> You decided the anniversary touch last time, but you never logged what you did. Want to capture it so I keep it in the loop?</div>
+            <input class="gipt" placeholder="e.g. 'sunset rooftop dinner at Memmo Alfama, day 3'">
+          </div>
+        </div>
+
+        <div class="navrow">
+          <button class="btn ghost" onclick="goPhase(1)">← Back to Phase 1</button>
+          <button class="btn" onclick="goPhase(3)">Continue to Phase 3 →</button>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- PHASE 3 — Matching infrastructure                         -->
+      <!-- ========================================================= -->
+      <div class="screen" id="screenP3">
+
+        <h1>Via as Fora's matching layer.</h1>
+        <p class="sub">By Phase 3, Via isn't a feature on a trip — it sits across the whole pipeline and feeds back into the platform that produced it.</p>
+
+        <div class="p3-pipeline">
+          <div class="p3-stages">
+            <div class="p3-stage"><div class="pn">Stage 1</div><div class="pl">Intake</div></div>
+            <div class="p3-stage"><div class="pn">Stage 2</div><div class="pl">Planning</div></div>
+            <div class="p3-stage"><div class="pn">Stage 3</div><div class="pl">Proposal</div></div>
+            <div class="p3-stage"><div class="pn">Stage 4</div><div class="pl">Booking</div></div>
+            <div class="p3-stage"><div class="pn">Stage 5</div><div class="pl">On the road</div></div>
+            <div class="p3-stage"><div class="pn">Stage 6</div><div class="pl">Re-engagement</div></div>
+          </div>
+          <div class="p3-via">
+            <span class="lbl">Via</span>
+            <span class="desc">running across every stage — same trust bridge, end to end</span>
+          </div>
+        </div>
+
+        <div class="p3-boxes">
+          <div class="p3-box">
+            <div class="hd">Feeds back</div>
+            <h3>Supply quality</h3>
+            <p>Advisor overrides on Via's picks are signal about which Partners aren't matching their brand promises. Sharpens Fora Reserve, Preferred Partners, Tablet Plus.</p>
+          </div>
+          <div class="p3-box">
+            <div class="hd">Compounds into</div>
+            <h3>Advisor knowledge</h3>
+            <p>Lists are static taste. Via's per-trip "preserved judgment" is dynamic taste — compounds into personalization, advisor by advisor, trip by trip.</p>
+          </div>
+          <div class="p3-box">
+            <div class="hd">Sharpens</div>
+            <h3>Demand qualification</h3>
+            <p>Leads come in via the marketing funnel. Via qualifies before they hit an advisor and routes high-fit to high-fit. Higher close rate, same Leads program.</p>
+          </div>
+        </div>
+
+        <div class="p3-foot">
+          <b>This is the "Via-ready API" work</b> Jake and Shaina are aligning on — what the rest of the org is already racing toward. Phase 3 is what's already in motion; Phase 1 is just how it earns its first inch.
+        </div>
+
+        <div class="p3-summary">
+          <b>Phase 1</b> builds the trust bridge. <b>Phase 2</b> makes it the rails. <b>Phase 3</b> makes it the platform.
+        </div>
+
+        <div class="navrow">
+          <button class="btn ghost" onclick="goPhase(1)">← Back to Phase 1</button>
+          <button class="btn ghost" onclick="goPhase(2)">← Back to Phase 2</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============ State ============
+  var phase = 1;
+  var step = 1;
+  var algarveResolved = false;
+
+  // ============ Phase / step navigation ============
+  function goPhase(p){
+    phase = p;
+    document.getElementById('ph1').classList.toggle('active', p===1);
+    document.getElementById('ph2').classList.toggle('active', p===2);
+    document.getElementById('ph3').classList.toggle('active', p===3);
+    document.getElementById('stepper').style.display = (p===1) ? 'flex' : 'none';
+    hideAllScreens();
+    if(p===1){ goStep(step || 1); }
+    else if(p===2){
+      document.getElementById('screenP2').classList.add('show');
+      setCrumb('Phase 2 · Lifecycle preview');
+      setDemoNotes('Phase 2 preview · Via in the trip lifecycle', null, 'Iterates · doesn\'t re-do');
+    }
+    else if(p===3){
+      document.getElementById('screenP3').classList.add('show');
+      setCrumb('Phase 3 · Platform preview');
+      setDemoNotes('Phase 3 preview · Via as the platform\'s matching layer', null, 'Where the trust bridge ends up');
+    }
+    window.scrollTo(0,0);
+  }
+
+  function goStep(n){
+    if(phase !== 1) phase = 1;
+    document.getElementById('ph1').classList.add('active');
+    document.getElementById('ph2').classList.remove('active');
+    document.getElementById('ph3').classList.remove('active');
+    document.getElementById('stepper').style.display = 'flex';
+    step = n;
+    hideAllScreens();
+    document.getElementById('screen'+n).classList.add('show');
+    for(var i=1;i<=3;i++){
+      var s = document.getElementById('s'+i);
+      s.classList.toggle('active', i===n);
+      s.classList.toggle('done', i<n);
+    }
+    if(n===1){
+      setCrumb('<b>Inbox</b>');
+      setDemoNotes('Where the trust bridge starts', 'AI Dabbler');
+    }
+    if(n===2){
+      setCrumb('Inbox <span class="sep">›</span> Reyes anniversary <span class="sep">›</span> <b>Via outline</b>');
+      setDemoNotes('The trust bridge in motion', 'AI Dabbler');
+    }
+    if(n===3){
+      setCrumb('Inbox <span class="sep">›</span> Reyes anniversary <span class="sep">›</span> <b>Itinerary</b>');
+      setDemoNotes('Hands off into Fora\'s existing itinerary builder', 'AI Dabbler');
+    }
+    window.scrollTo(0,0);
+  }
+
+  function hideAllScreens(){
+    ['screen1','screen2','screen3','screenP2','screenP3'].forEach(function(id){
+      document.getElementById(id).classList.remove('show');
+    });
+  }
+
+  function setCrumb(html){
+    document.getElementById('crumb').innerHTML = html;
+  }
+
+  function setDemoNotes(stage, segment, extra){
+    var notes = document.getElementById('demoNotes');
+    var parts = '<span class="dn-label">Demo</span>' +
+                '<span class="dn-item">' + stage + '</span>';
+    if(segment){
+      parts += '<span class="dn-item">Segment: <b>' + segment + '</b></span>';
+    }
+    if(extra){
+      parts += '<span class="dn-item">' + extra + '</span>';
+    }
+    notes.innerHTML = parts;
+  }
+
+  // ============ Refine with Via ============
+  // Pre-baked responses, keyed by element
+  var refineResponses = {
+    lisbon: "Got it — swapping Hotel das Janelas for <b>Memmo Príncipe Real</b>. Same neighborhood but quieter, residential-feeling. Rooftop pool. Preferred partner. Hotel Carlota shape preserved. Rate ~$1,920 est.",
+    algarve: "Got it — adding a fourth: <b>Quinta da Comporta</b>, wildcard. Different vendor, lower commission (8%) but on the rate-drop watchlist. Want me to pin it?",
+    douro: "Got it — swapping the Douro day for a <b>Sintra half-day</b>. More walkable, closer to Lisbon, no transfer needed. Matches the boutique-not-big-tour shape from the Reyes' form."
+  };
+
+  function toggleRefine(key){
+    var panel = document.getElementById('refine-'+key);
+    panel.classList.toggle('open');
+    if(panel.classList.contains('open')){
+      var ipt = document.getElementById('ipt-'+key);
+      if(ipt) ipt.focus();
+    }
+  }
+
+  function closeRefine(key){
+    document.getElementById('refine-'+key).classList.remove('open');
+  }
+
+  function submitRefine(key){
+    var think = document.getElementById('think-'+key);
+    var result = document.getElementById('result-'+key);
+    var ipt = document.getElementById('ipt-'+key);
+    if(ipt) ipt.blur();
+    result.classList.remove('show');
+    think.classList.add('show');
+    setTimeout(function(){
+      think.classList.remove('show');
+      result.innerHTML = refineResponses[key] || "Got it — re-checking and back to you in a moment.";
+      result.classList.add('show');
+    }, 700);
+  }
+
+  // ============ Rate validation ============
+  function validateRate(id){
+    var box = document.getElementById('rate'+id);
+    box.innerHTML =
+      '<span class="rate-num rate-ok">$1,812 confirmed</span>' +
+      '<span class="meta">Live GDS rate · held 20 min</span>';
+  }
+
+  // ============ Algarve resolution ============
+  function resolveAlgarve(choice){
+    var tag = document.getElementById('tag-algarve');
+    tag.innerHTML = '<span class="dot"></span>Your pick';
+    tag.className = 'pill pick';
+    if(!algarveResolved){
+      algarveResolved = true;
+      document.getElementById('scoreNeed').textContent = '0';
+      document.getElementById('scoreMatch').textContent = '4';
+    }
+    // Update the timeline preview on Screen 3
+    var name = document.getElementById('tline-algarve-name');
+    var detail = document.getElementById('tline-algarve-detail');
+    var sig = document.getElementById('tline-algarve-sig');
+    if(name) name.textContent = choice;
+    if(detail) detail.textContent = 'Your pick · 4 nights';
+    if(sig) sig.textContent = 'Your pick — Via will validate the rate and slot it in';
+  }
+
+  // ============ Feedback pills ============
+  function fb(el){
+    var pills = el.parentNode.querySelectorAll('.fpill');
+    pills.forEach(function(p){ p.classList.remove('picked'); });
+    el.classList.add('picked');
+    document.getElementById('fbDone').classList.add('show');
+  }
+
+  // ============ Other inbox rows (just bounce for now) ============
+  function bumpOther(name){
+    // No-op for the demo — Reyes is the active path
+  }
+
+  // ============ Reset ============
+  function resetProto(){
+    algarveResolved = false;
+    document.getElementById('scoreNeed').textContent = '1';
+    document.getElementById('scoreMatch').textContent = '3';
+    var tag = document.getElementById('tag-algarve');
+    tag.innerHTML = '<span class="dot"></span>Needs your call';
+    tag.className = 'pill need';
+    document.querySelectorAll('input[name=algarve]').forEach(function(r){ r.checked = false; });
+    document.getElementById('rate1').innerHTML =
+      '<span class="rate-num rate-est">~$1,840 est.</span>' +
+      '<span class="meta">Via estimate · not a held rate</span>' +
+      '<button class="btn ghost sm" onclick="validateRate(1)">Validate rate</button>';
+    document.getElementById('fbDone').classList.remove('show');
+    document.querySelectorAll('.fpill').forEach(function(p){ p.classList.remove('picked'); });
+    ['lisbon','algarve','douro'].forEach(function(k){
+      var p = document.getElementById('refine-'+k);
+      if(p) p.classList.remove('open');
+      var r = document.getElementById('result-'+k);
+      if(r){ r.classList.remove('show'); r.innerHTML = ''; }
+      var ipt = document.getElementById('ipt-'+k);
+      if(ipt) ipt.value = '';
+    });
+    var name = document.getElementById('tline-algarve-name');
+    var detail = document.getElementById('tline-algarve-detail');
+    var sig = document.getElementById('tline-algarve-sig');
+    if(name) name.textContent = 'The Algarve · region TBD';
+    if(detail) detail.textContent = 'Your call — three Fora boutique options pending';
+    if(sig) sig.textContent = 'Needs your call — pick on the outline screen';
+    goPhase(1);
+    goStep(1);
+  }
+
+  // ============ Keyboard nav ============
+  document.addEventListener('keydown', function(e){
+    if(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if(phase === 1){
+      if(e.key === 'ArrowRight' && step < 3) goStep(step + 1);
+      if(e.key === 'ArrowLeft' && step > 1) goStep(step - 1);
+    }
+  });
+</script>
+</body>
+</html>
