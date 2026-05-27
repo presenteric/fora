@@ -69,28 +69,28 @@
 
   .main{padding:18px 24px 60px;max-width:1280px;width:100%;margin:0 auto;}
 
-  /* === Phase strip ======================================================= */
-  .phasestrip{
-    display:flex;gap:8px;margin-bottom:14px;align-items:center;
+  /* === Phase segmented control (in topbar) =============================== */
+  .segctl{
+    display:flex;background:#fff;border:1px solid var(--line);
+    border-radius:999px;overflow:hidden;height:36px;
   }
-  .phasestrip .lbl{
-    font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);
-    margin-right:8px;
+  .segctl .seg{
+    display:flex;align-items:center;gap:8px;
+    padding:0 14px;font-size:12.5px;color:var(--mid);cursor:pointer;
+    border-right:1px solid var(--line);
+    transition:background 120ms, color 120ms;
   }
-  .phase{
-    border:1px solid var(--line);background:#fff;
-    border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--mid);
-    cursor:pointer;display:flex;align-items:center;gap:8px;
+  .segctl .seg:last-child{border-right:none;}
+  .segctl .seg:hover{background:var(--bg);color:var(--ink);}
+  .segctl .seg b{font-weight:550;color:var(--ink);}
+  .segctl .seg .tinytag{
+    font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    background:var(--line-soft);color:var(--mid);
+    padding:2px 5px;border-radius:3px;
   }
-  .phase b{color:var(--ink);font-weight:600;}
-  .phase .tinytag{
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);
-    padding:2px 6px;border-radius:3px;background:var(--line-soft);
-  }
-  .phase.active{background:var(--via-bg);border-color:var(--via-soft);}
-  .phase.active b{color:var(--via-ink);}
-  .phase.active .tinytag{background:var(--via);color:#fff;}
-  .phase:hover{border-color:var(--via);}
+  .segctl .seg.active{background:var(--via);color:#fff;}
+  .segctl .seg.active b{color:#fff;font-weight:600;}
+  .segctl .seg.active .tinytag{background:rgba(255,255,255,.22);color:#fff;}
 
   /* === Stepper =========================================================== */
   .steps{display:flex;gap:6px;margin-bottom:22px;}
@@ -558,24 +558,21 @@
 
     <header class="topbar">
       <div class="lofi">Lo-fi prototype · not production</div>
+      <div class="segctl" role="tablist" aria-label="Roadmap phase">
+        <div class="seg active" id="ph1" onclick="goPhase(1)">
+          <span class="tinytag">P1</span><b>Trust bridge</b>
+        </div>
+        <div class="seg" id="ph2" onclick="goPhase(2)">
+          <span class="tinytag">P2</span><b>Lifecycle rails</b>
+        </div>
+        <div class="seg" id="ph3" onclick="goPhase(3)">
+          <span class="tinytag">P3</span><b>Platform layer</b>
+        </div>
+      </div>
       <div class="fora">FORA</div>
     </header>
 
     <div class="main">
-
-      <!-- Phase strip -->
-      <div class="phasestrip">
-        <span class="lbl">Roadmap</span>
-        <div class="phase active" id="ph1" onclick="goPhase(1)">
-          <span class="tinytag">P1</span><b>Trust bridge</b>
-        </div>
-        <div class="phase" id="ph2" onclick="goPhase(2)">
-          <span class="tinytag">P2</span>Lifecycle rails
-        </div>
-        <div class="phase" id="ph3" onclick="goPhase(3)">
-          <span class="tinytag">P3</span>Platform layer
-        </div>
-      </div>
 
       <!-- Phase 1 stepper -->
       <div class="steps" id="stepper">
