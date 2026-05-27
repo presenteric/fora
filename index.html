@@ -51,34 +51,7 @@
   input,textarea{font-family:inherit;font-size:13px;color:var(--ink);}
 
   /* === App shell ========================================================= */
-  .app{display:grid;grid-template-columns:60px 1fr;min-height:100vh;}
-
-  .rail{
-    background:var(--rail);
-    border-right:1px solid var(--line);
-    display:flex;flex-direction:column;align-items:center;
-    padding:14px 0;gap:14px;position:sticky;top:0;height:100vh;
-  }
-  .rail .mark{
-    width:30px;height:30px;border-radius:6px;
-    background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;
-    font-weight:700;font-size:13px;letter-spacing:.04em;margin-bottom:6px;
-  }
-  .rail .icn{
-    width:34px;height:34px;border-radius:6px;
-    display:flex;align-items:center;justify-content:center;
-    color:var(--soft);font-size:16px;cursor:default;
-  }
-  .rail .icn.active{background:#fff;color:var(--ink);box-shadow:var(--shadow-card);}
-  .rail .icn:hover{color:var(--ink);}
-  .rail .spacer{flex:1;}
-  .rail .via-mark{
-    width:34px;height:34px;border-radius:6px;
-    background:var(--via);color:#fff;display:flex;align-items:center;justify-content:center;
-    font-family:var(--serif);font-style:italic;font-size:17px;
-  }
-
-  .content{display:flex;flex-direction:column;min-width:0;}
+  .app{min-height:100vh;display:flex;flex-direction:column;}
 
   .topbar{
     background:var(--topbar);
@@ -86,18 +59,12 @@
     display:flex;align-items:center;justify-content:space-between;
     padding:0 24px;height:54px;position:sticky;top:0;z-index:10;
   }
-  .topbar .crumb{
-    color:var(--mid);font-size:13px;display:flex;gap:8px;align-items:center;
-  }
-  .topbar .crumb b{color:var(--ink);font-weight:600;}
-  .topbar .crumb .sep{color:var(--soft);}
-  .topbar .right{display:flex;gap:14px;align-items:center;}
   .lofi{
     font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
-    color:var(--mid);border:1px solid var(--line);padding:4px 9px;border-radius:20px;background:#fff;
+    color:var(--mid);border:1px solid var(--line);padding:4px 11px;border-radius:20px;background:#fff;
   }
   .topbar .fora{
-    font-family:var(--serif);font-size:18px;letter-spacing:.18em;font-weight:600;
+    font-family:var(--serif);font-size:20px;letter-spacing:.2em;font-weight:600;
   }
 
   .main{padding:18px 24px 60px;max-width:1280px;width:100%;margin:0 auto;}
@@ -589,29 +556,9 @@
 
 <div class="app">
 
-  <!-- ============ Left rail ============ -->
-  <aside class="rail">
-    <div class="mark">F</div>
-    <div class="icn active" title="Inbox">✉</div>
-    <div class="icn" title="Trips">◧</div>
-    <div class="icn" title="Partners">★</div>
-    <div class="icn" title="Deals">◇</div>
-    <div class="icn" title="Learn">○</div>
-    <div class="spacer"></div>
-    <div class="via-mark" title="Via">V</div>
-  </aside>
-
-  <!-- ============ Content ============ -->
-  <div class="content">
-
     <header class="topbar">
-      <div class="crumb" id="crumb">
-        <b>Inbox</b>
-      </div>
-      <div class="right">
-        <div class="lofi">Lo-fi prototype · not production</div>
-        <div class="fora">FORA</div>
-      </div>
+      <div class="lofi">Lo-fi prototype · not production</div>
+      <div class="fora">FORA</div>
     </header>
 
     <div class="main">
@@ -1141,7 +1088,6 @@
       </div>
 
     </div>
-  </div>
 </div>
 
 <script>
@@ -1161,12 +1107,10 @@
     if(p===1){ goStep(step || 1); }
     else if(p===2){
       document.getElementById('screenP2').classList.add('show');
-      setCrumb('Phase 2 · Lifecycle preview');
       setDemoNotes('Phase 2 preview · Via in the trip lifecycle', null, 'Iterates · doesn\'t re-do');
     }
     else if(p===3){
       document.getElementById('screenP3').classList.add('show');
-      setCrumb('Phase 3 · Platform preview');
       setDemoNotes('Phase 3 preview · Via as the platform\'s matching layer', null, 'Where the trust bridge ends up');
     }
     window.scrollTo(0,0);
@@ -1186,18 +1130,9 @@
       s.classList.toggle('active', i===n);
       s.classList.toggle('done', i<n);
     }
-    if(n===1){
-      setCrumb('<b>Inbox</b>');
-      setDemoNotes('Where the trust bridge starts', 'AI Dabbler');
-    }
-    if(n===2){
-      setCrumb('Inbox <span class="sep">›</span> Reyes anniversary <span class="sep">›</span> <b>Via outline</b>');
-      setDemoNotes('The trust bridge in motion', 'AI Dabbler');
-    }
-    if(n===3){
-      setCrumb('Inbox <span class="sep">›</span> Reyes anniversary <span class="sep">›</span> <b>Itinerary</b>');
-      setDemoNotes('Hands off into Fora\'s existing itinerary builder', 'AI Dabbler');
-    }
+    if(n===1) setDemoNotes('Where the trust bridge starts', 'AI Dabbler');
+    if(n===2) setDemoNotes('The trust bridge in motion', 'AI Dabbler');
+    if(n===3) setDemoNotes('Hands off into Fora\'s existing itinerary builder', 'AI Dabbler');
     window.scrollTo(0,0);
   }
 
@@ -1205,10 +1140,6 @@
     ['screen1','screen2','screen3','screenP2','screenP3'].forEach(function(id){
       document.getElementById(id).classList.remove('show');
     });
-  }
-
-  function setCrumb(html){
-    document.getElementById('crumb').innerHTML = html;
   }
 
   function setDemoNotes(stage, segment, extra){
