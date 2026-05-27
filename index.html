@@ -581,18 +581,18 @@
 
     <div class="main">
 
-      <!-- Phase 1 stepper -->
-      <div class="steps" id="stepper">
-        <div class="step active" id="s1" onclick="goStep(1)"><b>Step 1</b>Advisor inbox</div>
-        <div class="step" id="s2" onclick="goStep(2)"><b>Step 2</b>Via's outline</div>
-        <div class="step" id="s3" onclick="goStep(3)"><b>Step 3</b>Itinerary builder</div>
-      </div>
-
       <!-- Demo notes — chrome for the Fora audience, not the advisor -->
       <div class="demo-notes" id="demoNotes">
         <span class="dn-label">Demo</span>
         <span class="dn-item" id="dn-stage">Where the trust bridge starts</span>
         <span class="dn-item" id="dn-segment">Segment: <b>AI Dabbler</b></span>
+      </div>
+
+      <!-- Phase 1 stepper -->
+      <div class="steps" id="stepper">
+        <div class="step active" id="s1" onclick="goStep(1)"><b>Step 1</b>Advisor inbox</div>
+        <div class="step" id="s2" onclick="goStep(2)"><b>Step 2</b>Via's outline</div>
+        <div class="step" id="s3" onclick="goStep(3)"><b>Step 3</b>Itinerary builder</div>
       </div>
 
       <!-- ========================================================= -->
@@ -1029,11 +1029,6 @@
             <input class="gipt" placeholder="e.g. 'sunset rooftop dinner at Memmo Alfama, day 3'">
           </div>
         </div>
-
-        <div class="navrow">
-          <button class="btn ghost" onclick="goPhase(1)">← Back to Phase 1</button>
-          <button class="btn" onclick="goPhase(3)">Continue to Phase 3 →</button>
-        </div>
       </div>
 
       <!-- ========================================================= -->
@@ -1083,11 +1078,6 @@
 
         <div class="p3-summary">
           <b>Phase 1</b> builds the trust bridge. <b>Phase 2</b> makes it the rails. <b>Phase 3</b> makes it the platform.
-        </div>
-
-        <div class="navrow">
-          <button class="btn ghost" onclick="goPhase(1)">← Back to Phase 1</button>
-          <button class="btn ghost" onclick="goPhase(2)">← Back to Phase 2</button>
         </div>
       </div>
 
