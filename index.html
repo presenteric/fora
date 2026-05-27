@@ -557,6 +557,112 @@
     padding:10px 14px;font-size:11.5px;color:var(--mid);margin-bottom:14px;
   }
   .preview-pre b{color:var(--via);font-weight:600;}
+
+  /* === Mobile ============================================================ */
+  @media (max-width:720px){
+    /* Topbar: 2 rows — lofi+FORA on top, segmented control on its own row */
+    .topbar{
+      padding:8px 14px;height:auto;min-height:54px;
+      flex-wrap:wrap;gap:8px 10px;align-items:center;
+    }
+    .lofi{font-size:9.5px;padding:3px 9px;letter-spacing:.06em;}
+    .topbar .fora{font-size:17px;letter-spacing:.16em;margin-left:auto;}
+    .segctl{flex-basis:100%;order:3;height:34px;}
+    .segctl .seg{flex:1;justify-content:center;padding:0 8px;font-size:11.5px;gap:6px;}
+    .segctl .seg .tinytag{font-size:8.5px;padding:2px 4px;letter-spacing:.06em;}
+
+    /* Main padding */
+    .main{padding:14px 14px 48px;}
+
+    /* Demo notes */
+    .demo-notes{padding:7px 12px;}
+    .demo-notes .dn-label{font-size:9px;padding-right:10px;margin-right:10px;}
+    .demo-notes .dn-item{font-size:10.5px;margin-right:14px;}
+
+    /* Stepper */
+    .step{padding:8px 9px;font-size:11.5px;}
+    .step b{font-size:9px;}
+
+    /* Headlines */
+    h1{font-size:19px;}
+    .sub{font-size:13px;margin-bottom:14px;}
+
+    /* Inbox row — stack status pill below the trip info */
+    .inrow{grid-template-columns:1fr;gap:8px;padding:13px 16px;}
+    .inrow.active{padding-left:13px;}
+    .inrow .statwrap{justify-self:flex-start;}
+    .stat{font-size:10.5px;padding:2px 9px;}
+
+    /* Reyes detail */
+    .detail{padding:14px 16px;}
+    .detail-head{flex-direction:column;gap:5px;align-items:flex-start;}
+    .kv{grid-template-columns:1fr;gap:8px 0;}
+
+    /* Inbox header */
+    .inbox-head{padding:11px 16px;font-size:10.5px;}
+    .inbox-head span{display:none;}
+
+    /* Via sidebar — stays full width once inbox-grid collapses */
+    .via-side{position:static;}
+    .via-primary{padding:16px;}
+    .via-primary h3{font-size:15px;}
+    .via-primary .stats{flex-wrap:wrap;gap:10px 14px;}
+
+    /* Score bar */
+    .scorebar{gap:6px;}
+    .score{padding:10px 11px;}
+    .score .n{font-size:20px;}
+    .score .l{font-size:9px;letter-spacing:.06em;}
+
+    /* Element rows on Screen 2 */
+    .el{gap:11px;padding:14px 0;}
+    .el .photo{width:54px;height:40px;}
+    .el-top{flex-wrap:wrap;}
+    .pill{font-size:10px;padding:2px 8px;}
+    .opt{font-size:12px;padding:7px 10px;gap:7px;flex-wrap:wrap;}
+    .opt .src{margin-left:0;font-size:10px;width:100%;margin-top:3px;}
+
+    /* Refine widget */
+    .refine-panel{padding:10px 11px;}
+    .refine-panel .row{flex-wrap:wrap;}
+
+    /* Screen 3 — builder */
+    .builder-head{padding:14px 16px 12px;flex-direction:column;align-items:flex-start;gap:6px;}
+    .builder-head .brand{font-size:18px;letter-spacing:.18em;}
+    .builder-head .util{font-size:11px;}
+    .hero{min-height:240px;}
+    .hero .day{left:18px;bottom:16px;}
+    .hero .day .title{font-size:24px;}
+    .timeline{padding:14px 16px;}
+    .timeline .tline{grid-template-columns:56px 1fr;gap:10px;padding:11px 0;}
+    .timeline .tdate{font-size:10px;}
+    .builder-foot{padding:12px 16px;font-size:12px;}
+
+    /* Feedback */
+    .feedback{padding:13px 15px;}
+    .fpill{padding:5px 12px;font-size:12px;margin-bottom:6px;}
+
+    /* Phase 2 */
+    .clientmsg{padding:15px 16px;}
+    .clientmsg p{font-size:13.5px;}
+    .p2-panel{padding:4px 14px 14px;}
+    .p2-item{grid-template-columns:1fr;gap:5px;}
+    .p2-item .ptype{padding-top:0;}
+
+    /* Phase 3 */
+    .p3-pipeline{padding:16px 16px;}
+    .p3-stages{grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:14px;}
+    .p3-stage{padding:9px 8px;}
+    .p3-stage .pl{font-size:11.5px;}
+    .p3-via{flex-direction:column;align-items:flex-start;gap:3px;padding:9px 14px;}
+    .p3-via .lbl{font-size:13.5px;}
+    .p3-via .desc{font-size:11px;}
+    .p3-box{padding:13px 14px;}
+
+    /* Navrows */
+    .navrow{flex-direction:column-reverse;gap:8px;}
+    .navrow .btn,.navrow .btn.ghost{width:100%;}
+  }
 </style>
 </head>
 <body>
